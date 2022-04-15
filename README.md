@@ -1,6 +1,8 @@
 ### Install
 
 ```bash
+git clone https://github.com/Shanyaliux/DataAnalyze.git
+cd DataAnalyze
 pip install -r requirements.txt
 ```
 
