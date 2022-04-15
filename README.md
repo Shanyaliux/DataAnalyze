@@ -25,3 +25,11 @@ python DataAnalyze.py coco ./tarin.json --outPath ./out/
 ```bash
 python DataAnalyze.py voc ./xml/ --outPath ./out/
 ```
+
+<div  align="center">    
+<img src="./sample/boxWH.png" width = "300" height = "200" alt="boxWH" align=center />
+<img src="./sample/AnchorBoxRatio.png" width = "300" height = "200" alt="boxWH" align=center />
+<img src="./sample/EachClassNum.png" width = "300" height = "200" alt="boxWH" align=center />
+<img src="./sample/EachClassNumPie.png" width = "300" height = "200" alt="boxWH" align=center />
+</div>
+
