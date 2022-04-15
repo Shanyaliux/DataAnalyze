@@ -50,12 +50,12 @@ class DataAnalyze:
         for i, line in enumerate(lines):
             lin = line.strip(' ').split(' ')
             h, w = lin[1].split(',')
-            imgWH_list[0].append(int(w))
-            imgWH_list[1].append(int(h))
+            imgWH_list[0].append(float(w))
+            imgWH_list[1].append(float(h))
             for obj in lin[2:]:
                 ob = obj.split(',')
-                w = int(ob[2]) - int(ob[0])
-                h = int(ob[3]) - int(ob[1])
+                w = float(ob[2]) - float(ob[0])
+                h = float(ob[3]) - float(ob[1])
                 boxWH_list[0].append(w)
                 boxWH_list[1].append(h)
                 anchorRatio_list.append(self.calculateAnchorRatio(w, h))
@@ -137,8 +137,8 @@ class DataAnalyze:
             for annotation in jsonData['annotations']:
                 xmin = annotation['bbox'][0]
                 ymin = annotation['bbox'][1]
-                xmax = str(int(xmin) + (int(annotation['bbox'][2])))
-                ymax = str(int(ymin) + (int(annotation['bbox'][3])))
+                xmax = str(float(xmin) + (float(annotation['bbox'][2])))
+                ymax = str(float(ymin) + (float(annotation['bbox'][3])))
                 boxInfo = '%s,%s,%s,%s,%s ' % (xmin, ymin, xmax, ymax, categories_dict[annotation['category_id']])
                 info_dict[annotation['image_id']] += boxInfo
             coco_info = ''
@@ -218,8 +218,8 @@ class DataAnalyze:
             lin = line.strip(' ').split(' ')
             for obj in lin[2:]:
                 ob = obj.split(',')
-                w = int(ob[2]) - int(ob[0])
-                h = int(ob[3]) - int(ob[1])
+                w = float(ob[2]) - float(ob[0])
+                h = float(ob[3]) - float(ob[1])
                 ecoWH_dict[ob[-1]][0].append(w)
                 ecoWH_dict[ob[-1]][1].append(h)
         for c in ecoWH_dict:
