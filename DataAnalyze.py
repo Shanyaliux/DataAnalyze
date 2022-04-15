@@ -1,20 +1,24 @@
 import argparse
 import os
+import json
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
 
 
 class DataAnalyze:
-    def __init__(self, xmlPath, outPath):
-        self.xmlPath = xmlPath
+    def __init__(self, type, path, outPath):
         self.outPath = outPath
         if not os.path.exists(self.outPath):
             os.makedirs(self.outPath)
-        self.vocInfo = self.readVoc()
-        self.statisticsInfo()
+        if type == 'coco':
+            self.statisticsInfo(self.readCoco(path))
+        elif type == 'voc':
+            self.statisticsInfo(self.readVoc(path))
+        else:
+            print('Currently only voc and coco formats are supported, please check if the first parameter is correct.')
 
-    def statisticsInfo(self):
-        lines = self.vocInfo.strip('\n').split('\n')
+    def statisticsInfo(self, info_data):
+        lines = info_data.strip('\n').split('\n')
         print('number of images: %d' % len(lines))
         imgWH_list = [[], []]
         boxWH_list = [[], []]
@@ -43,7 +47,7 @@ class DataAnalyze:
         self.statisticsEachImageObjectNum(eachImageObject_list)
         className_list = set(eachClass_list)
         print('classes = ', list(className_list))
-        self.statisticsEachClassObjectWH(className_list)
+        self.statisticsEachClassObjectWH(info_data, className_list)
 
     @staticmethod
     def readXml(xml, ignoreDiff=False):
@@ -69,14 +73,38 @@ class DataAnalyze:
         xmlInfo += '\n'
         return xmlInfo
 
-    def readVoc(self):
+    def readVoc(self, xmlPath):
         vocInfo = ''
-        xmlList = os.listdir(self.xmlPath)
+        xmlList = os.listdir(xmlPath)
         xmlList.sort()
         for xml in xmlList:
-            xmlFile = os.path.join(self.xmlPath, xml)
+            xmlFile = os.path.join(xmlPath, xml)
             vocInfo += self.readXml(xmlFile)
         return vocInfo
+
+    def readCoco(self, jsonFile):
+        with open(jsonFile) as f:
+            jsonData = json.load(f)
+            categories_dict = {}
+            for categories in jsonData['categories']:
+                categories_dict.update({categories['id']: categories['name']})
+            info_dict = {}
+            for image in jsonData['images']:
+                info_dict.update({image['id']: '%s %s,%s ' % (image['file_name'], image['width'], image['height'])})
+            # print(info_dict)
+            for annotation in jsonData['annotations']:
+                # print(annotation)
+                xmin = annotation['bbox'][0]
+                ymin = annotation['bbox'][1]
+                xmax = str(int(xmin) + (int(annotation['bbox'][2])))
+                ymax = str(int(ymin) + (int(annotation['bbox'][3])))
+                boxInfo = '%s,%s,%s,%s,%s ' % (xmin, ymin, xmax, ymax, categories_dict[annotation['category_id']])
+                info_dict[annotation['image_id']] += boxInfo
+            coco_info = ''
+            for info in info_dict:
+                coco_info += info_dict[info]
+                coco_info += '\n'
+            return coco_info
 
     @staticmethod
     def computeAnchorRatio(w, h):
@@ -112,8 +140,8 @@ class DataAnalyze:
         self.drawBar(eion_dict.keys(), eion_dict.values(),
                      'Number of boxes on each image', 'boxNum', 'imageNum', 'EachImageBoxes.png')
 
-    def statisticsEachClassObjectWH(self, className_list):
-        lines = self.vocInfo.strip('\n').split('\n')
+    def statisticsEachClassObjectWH(self, info_data, className_list):
+        lines = info_data.strip('\n').split('\n')
         if not os.path.exists(os.path.join(self.outPath, 'EachClassBoxWH')):
             os.makedirs(os.path.join(self.outPath, 'EachClassBoxWH'))
         ecoWH_dict = {}
@@ -161,15 +189,18 @@ class DataAnalyze:
 
 def parse_args():
     parser = argparse.ArgumentParser(description='dataset analyze')
-    parser.add_argument('xmlPath', type=str, help='xml file')
-    parser.add_argument('--outPath', type=str, help='out file', default='out')
+    parser.add_argument('type', type=str, help="Dataset format, optional 'voc' and 'coco'")
+    parser.add_argument('path', type=str, help='Dataset path, if it is a voc dataset, it corresponds '
+                                               'to the xml directory, if it is a coco dataset, it is the json file '
+                                               'path')
+    parser.add_argument('--outPath', type=str, default='out', help='Result output directory')
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parse_args()
-    DataAnalyze(args.xmlPath, args.outPath)
+    DataAnalyze(args.type, args.path, args.outPath)
 
 
 if __name__ == '__main__':
