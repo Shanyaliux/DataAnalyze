@@ -3,6 +3,7 @@ import os
 import json
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class DataAnalyze:
@@ -16,66 +17,154 @@ class DataAnalyze:
         :param outPath: result path
         """
         self.outPath = outPath
+
+        self.imageWH_list = [[], []]
+        self.bboxWH_list = [[], []]
+        self.anchorRatio_list = []
+        self.imagesNum = 0
+        self.bboxNum = 0
+        self.allCategories = []
+        self.eachCategoryBboxWH = {}
+        self.eachCategoryImageNum = {}
+        self.eachCategoryBboxNum = {}
+        self.eachImageCategoryNum = {}
+        self.eachImageBboxNum_list = []
+        self.sizeBboxNum = dict.fromkeys(['small', 'medium', 'large'], 0)
+
         if not os.path.exists(self.outPath):
             os.makedirs(self.outPath)
         if type == 'coco':
-            self.statisticsInfo(self.readCoco(path))
+            # self.statisticsInfo(self.readCoco(path))
+            self.analyzeInfo(self.readCoco(path))
+            self.drawAll()
         elif type == 'voc':
-            self.statisticsInfo(self.readVoc(path))
+            # self.statisticsInfo(self.readVoc(path))
+            self.analyzeInfo(self.readVoc(path))
+            self.drawAll()
         else:
             print('Currently only voc and coco formats are supported, please check if the first parameter is correct.')
 
-    def statisticsInfo(self, info_data):
-        """
-        Statistical dataset info.
-        Include:
-            - number of images and boxes
-            - classes name
-            - scatter of images' width and height
-            - scatter of boxes' width and height
-            - bar of anchor box ratio
-            - bar and pie of number of each class
-            - bar of number of boxes on each image
-            - scatter of each class' width and height
-        :param info_data: string of return by readVoc() or readCoco()
-        :return:
-        """
+    def analyzeInfo(self, info_data):
         lines = info_data.strip('\n').split('\n')
-        print('number of images: %d' % len(lines))
-        imgWH_list = [[], []]
-        boxWH_list = [[], []]
-        anchorRatio_list = []
-        eachClass_list = []
-        eachImageObject_list = []
+        self.imagesNum = len(lines)
         for i, line in enumerate(lines):
             lin = line.strip(' ').split(' ')
             h, w = lin[1].split(',')
-            imgWH_list[0].append(float(w))
-            imgWH_list[1].append(float(h))
+            self.imageWH_list[0].append(float(w))
+            self.imageWH_list[1].append(float(h))
+            calculatedCategory = []
             for obj in lin[2:]:
                 ob = obj.split(',')
                 w = float(ob[2]) - float(ob[0])
                 h = float(ob[3]) - float(ob[1])
-                boxWH_list[0].append(w)
-                boxWH_list[1].append(h)
-                anchorRatio_list.append(self.calculateAnchorRatio(w, h))
-                eachClass_list.append(ob[-1])
-            eachImageObject_list.append(len(lin) - 2)
-        print('number of boxes: %d' % len(anchorRatio_list))
-        # draw scatter of images' width and height
-        self.drawScatter(imgWH_list[0], imgWH_list[1], 'Image w h', 'w', 'h', 'WH.png')
-        # draw scatter of boxes' width and height
-        self.drawScatter(boxWH_list[0], boxWH_list[1], 'box w h', 'w', 'h', 'boxWH.png')
-        # Statistical anchor box ratio
-        self.statisticsAnchorRatio(anchorRatio_list)
-        # Count the number of each class
-        self.statisticsEachClassNum(eachClass_list)
-        # Count the number of boxes on each image
-        self.statisticsEachImageObjectNum(eachImageObject_list)
-        className_list = set(eachClass_list)
+                self.bboxWH_list[0].append(w)
+                self.bboxWH_list[1].append(h)
+                self.anchorRatio_list.append(self.calculateAnchorRatio(w, h))
+                self.allCategories.append(ob[-1])
+                if ob[-1] not in self.eachCategoryBboxNum.keys():
+                    self.eachCategoryBboxNum.update({ob[-1]: 1})
+                else:
+                    self.eachCategoryBboxNum[ob[-1]] += 1
+                if ob[-1] not in self.eachCategoryBboxWH.keys():
+                    self.eachCategoryBboxWH.update({ob[-1]: [[w], [h]]})
+                else:
+                    self.eachCategoryBboxWH[ob[-1]][0].append(w)
+                    self.eachCategoryBboxWH[ob[-1]][1].append(h)
+                if ob[-1] not in self.eachCategoryImageNum.keys():
+                    self.eachCategoryImageNum.update({ob[-1]: 1})
+                    calculatedCategory.append(ob[-1])
+                else:
+                    if ob[-1] not in calculatedCategory:
+                        self.eachCategoryImageNum[ob[-1]] += 1
+                        calculatedCategory.append(ob[-1])
+            if len(calculatedCategory) not in self.eachImageCategoryNum.keys():
+                self.eachImageCategoryNum.update({len(calculatedCategory): 1})
+            else:
+                self.eachImageCategoryNum[len(calculatedCategory)] += 1
+            self.eachImageBboxNum_list.append(len(lin) - 2)
+        self.bboxNum = len(self.anchorRatio_list)
+        area_list = np.multiply(np.array(self.bboxWH_list[0]), np.array(self.bboxWH_list[1]))
+        for area in area_list:
+            if area < (32 * 32):
+                self.sizeBboxNum['small'] += 1
+            elif area < (96 * 96):
+                self.sizeBboxNum['medium'] += 1
+            else:
+                self.sizeBboxNum['large'] += 1
+
+    def drawImageWHScatter(self):
+        self.drawScatter(self.imageWH_list[0],
+                         self.imageWH_list[1],
+                         "Scatter of image W & H",
+                         'W', 'H',
+                         'imageWH.png')
+
+    def drawBboxWHScatter(self):
+        self.drawScatter(self.bboxWH_list[0],
+                         self.bboxWH_list[1],
+                         "Scatter of bbox W & H",
+                         'W', 'H',
+                         'bboxWH.png')
+
+    def drawAnchorRatioBar(self):
+        r_dict = {}
+        for item in set(self.anchorRatio_list):
+            r_dict.update({item: self.anchorRatio_list.count(item)})
+        self.drawBar(r_dict.keys(), r_dict.values(),
+                     'AnchorBoxRatioBar', 'ratio', 'num', 'AnchorBoxRatio.png')
+
+    def drawEachCategoryNum(self):
+        c_dict = {}
+        for item in set(self.allCategories):
+            c_dict.update({item: self.allCategories.count(item)})
+        self.drawBar(c_dict.keys(), c_dict.values(),
+                     'the numbers of category', 'category', 'num', 'EachCategoryNum.png')
+        size = {}
+        for key in c_dict:
+            size.update({key: c_dict[key] / len(self.allCategories)})
+        self.drawPie(size.values(), size.keys(), 'the numbers of category', 'EachCategoryNumPie.png')
+
+    def drawEachCategoryImagesNum(self):
+        self.drawBar(self.eachCategoryImageNum.keys(), self.eachCategoryImageNum.values(),
+                     'the numbers of images for each category', 'category', 'num', 'EachCategoryImagesNum.png')
+
+    def drawEachCategoryBboxNum(self):
+        self.drawBar(self.eachCategoryBboxNum.keys(), self.eachCategoryBboxNum.values(),
+                     'the numbers of bboxes for each category', 'category', 'num', 'EachCategoryBboxesNum.png')
+
+    def drawEachImageBboxNum(self):
+        c_dict = {}
+        for item in set(self.eachImageBboxNum_list):
+            c_dict.update({item: self.eachImageBboxNum_list.count(item)})
+        self.drawBar(c_dict.keys(), c_dict.values(),
+                     'the numbers of bboxes included in each image',
+                     'numbers of bboxes in each image', 'num', 'EachImageBboxNum.png')
+
+    def drawSizeBboxNum(self):
+        self.drawBar(self.sizeBboxNum.keys(), self.sizeBboxNum.values(),
+                     'Number of bbox in different sizes', 'size', 'num', 'SizeBboxNum.png')
+
+    def drawEachCategoryBboxWH(self):
+        if not os.path.exists(os.path.join(self.outPath, 'EachCategoryBboxWH')):
+            os.makedirs(os.path.join(self.outPath, 'EachCategoryBboxWH'))
+        for c in self.eachCategoryBboxWH:
+            self.drawScatter(self.eachCategoryBboxWH[c][0], self.eachCategoryBboxWH[c][1],
+                             c + 'WH', 'w', 'h', os.path.join('EachCategoryBboxWH', c + 'WH.png'))
+
+    def drawAll(self):
+        print('number of images: %d' % self.imagesNum)
+        print('number of boxes: %d' % len(self.anchorRatio_list))
+        className_list = set(self.allCategories)
         print('classes = ', list(className_list))
-        # draw scatter of each class' width and height
-        self.statisticsEachClassObjectWH(info_data, className_list)
+        self.drawEachCategoryBboxWH()
+        self.drawImageWHScatter()
+        self.drawBboxWHScatter()
+        self.drawSizeBboxNum()
+        self.drawAnchorRatioBar()
+        self.drawEachCategoryBboxNum()
+        self.drawEachCategoryImagesNum()
+        self.drawEachCategoryNum()
+        self.drawEachImageBboxNum()
 
     def readXml(self, xml, ignoreDiff=False):
         """
@@ -160,72 +249,6 @@ class DataAnalyze:
             r = h / w
         return round(r)
 
-    def statisticsAnchorRatio(self, anchorRatio_list):
-        """
-        statistical anchor ratio and draw scatter
-        :param anchorRatio_list: list of all anchor ratio
-        :return:
-        """
-        r_dict = {}
-        for item in set(anchorRatio_list):
-            r_dict.update({item: anchorRatio_list.count(item)})
-        self.drawBar(r_dict.keys(), r_dict.values(),
-                     'AnchorBoxRatio', 'ratio', 'num', 'AnchorBoxRatio.png')
-
-    def statisticsEachClassNum(self, eachClass_list):
-        """
-        count number of each class and draw bar and pie
-        :param eachClass_list: list of all classes' name
-        :return:
-        """
-        c_dict = {}
-        for item in set(eachClass_list):
-            c_dict.update({item: eachClass_list.count(item)})
-        self.drawBar(c_dict.keys(), c_dict.values(),
-                     'EachClassNum', 'class', 'num', 'EachClassNum.png')
-
-        size = {}
-        for key in c_dict:
-            size.update({key: c_dict[key] / len(eachClass_list)})
-        self.drawPie(size.values(), size.keys(), 'EachClassNum', 'EachClassNumPie.png')
-
-    def statisticsEachImageObjectNum(self, eachImageObject_list):
-        """
-        count number of boxes on each image and draw bar
-        :param eachImageObject_list: list numer of boxes on each image
-        :return:
-        """
-        eion_dict = {}
-        for item in set(eachImageObject_list):
-            eion_dict.update({item: eachImageObject_list.count(item)})
-        self.drawBar(eion_dict.keys(), eion_dict.values(),
-                     'Number of boxes on each image', 'boxNum', 'imageNum', 'EachImageBoxes.png')
-
-    def statisticsEachClassObjectWH(self, info_data, className_list):
-        """
-        draw scatter of boxes of each class
-        :param info_data: string of return by readVoc() or readCoco()
-        :param className_list: list of classes' name
-        :return:
-        """
-        lines = info_data.strip('\n').split('\n')
-        if not os.path.exists(os.path.join(self.outPath, 'EachClassBoxWH')):
-            os.makedirs(os.path.join(self.outPath, 'EachClassBoxWH'))
-        ecoWH_dict = {}
-        for cn in className_list:
-            ecoWH_dict.update({cn: [[], []]})
-        for line in lines:
-            lin = line.strip(' ').split(' ')
-            for obj in lin[2:]:
-                ob = obj.split(',')
-                w = float(ob[2]) - float(ob[0])
-                h = float(ob[3]) - float(ob[1])
-                ecoWH_dict[ob[-1]][0].append(w)
-                ecoWH_dict[ob[-1]][1].append(h)
-        for c in ecoWH_dict:
-            self.drawScatter(ecoWH_dict[c][0], ecoWH_dict[c][1],
-                             c + 'WH', 'w', 'h', os.path.join('EachClassBoxWH', c + 'WH.png'))
-
     def drawScatter(self, x, y, title, xlabel, ylabel, imgName):
         """
         draw a scatter
@@ -284,18 +307,19 @@ class DataAnalyze:
 
 def parse_args():
     parser = argparse.ArgumentParser(description='dataset analyze')
-    parser.add_argument('type', type=str, help="Dataset format, optional 'voc' and 'coco'")
+    parser.add_argument('type', type=str, help="Dataset format, optional 'voc' and 'coco'", default='voc')
     parser.add_argument('path', type=str, help='Dataset path, if it is a voc dataset, it corresponds '
                                                'to the xml directory, if it is a coco dataset, it is the json file '
-                                               'path')
-    parser.add_argument('--outPath', type=str, default='out', help='Result output directory')
+                                               'path',
+                        default='/home/lgh/code/Voc2Coco/NEU-DET/xml')
+    parser.add_argument('--out', type=str, default='out', help='Result output directory')
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parse_args()
-    DataAnalyze(args.type, args.path, args.outPath)
+    DataAnalyze(args.type, args.path, args.out)
 
 
 if __name__ == '__main__':
