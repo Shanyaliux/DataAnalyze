@@ -26,7 +26,7 @@ class DataAnalyze:
         self.allCategories = []
         self.eachCategoryBboxWH = {}
         self.eachCategoryImageNum = {}
-        self.eachCategoryBboxNum = {}
+        # self.eachCategoryBboxNum = {}
         self.eachImageCategoryNum = {}
         self.eachImageBboxNum_list = []
         self.sizeBboxNum = dict.fromkeys(['small', 'medium', 'large'], 0)
@@ -61,10 +61,10 @@ class DataAnalyze:
                 self.bboxWH_list[1].append(h)
                 self.anchorRatio_list.append(self.calculateAnchorRatio(w, h))
                 self.allCategories.append(ob[-1])
-                if ob[-1] not in self.eachCategoryBboxNum.keys():
-                    self.eachCategoryBboxNum.update({ob[-1]: 1})
-                else:
-                    self.eachCategoryBboxNum[ob[-1]] += 1
+                # if ob[-1] not in self.eachCategoryBboxNum.keys():
+                #     self.eachCategoryBboxNum.update({ob[-1]: 1})
+                # else:
+                #     self.eachCategoryBboxNum[ob[-1]] += 1
                 if ob[-1] not in self.eachCategoryBboxWH.keys():
                     self.eachCategoryBboxWH.update({ob[-1]: [[w], [h]]})
                 else:
@@ -128,9 +128,9 @@ class DataAnalyze:
         self.drawBar(self.eachCategoryImageNum.keys(), self.eachCategoryImageNum.values(),
                      'the numbers of images for each category', 'category', 'num', 'EachCategoryImagesNum.png')
 
-    def drawEachCategoryBboxNum(self):
-        self.drawBar(self.eachCategoryBboxNum.keys(), self.eachCategoryBboxNum.values(),
-                     'the numbers of bboxes for each category', 'category', 'num', 'EachCategoryBboxesNum.png')
+    # def drawEachCategoryBboxNum(self):
+    #     self.drawBar(self.eachCategoryBboxNum.keys(), self.eachCategoryBboxNum.values(),
+    #                  'the numbers of bboxes for each category', 'category', 'num', 'EachCategoryBboxesNum.png')
 
     def drawEachImageBboxNum(self):
         c_dict = {}
@@ -161,7 +161,7 @@ class DataAnalyze:
         self.drawBboxWHScatter()
         self.drawSizeBboxNum()
         self.drawAnchorRatioBar()
-        self.drawEachCategoryBboxNum()
+        # self.drawEachCategoryBboxNum()
         self.drawEachCategoryImagesNum()
         self.drawEachCategoryNum()
         self.drawEachImageBboxNum()
