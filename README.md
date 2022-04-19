@@ -26,9 +26,9 @@ python DataAnalyze.py coco ./tarin.json --out ./out/
 python DataAnalyze.py voc ./xml/ --out ./out/
 ```
 
-![](./sample/boxWH.png)
-![](./sample/AnchorBoxRatio.png)
-![](./sample/EachClassNum.png)
-![](./sample/EachClassNumPie.png)
+![1](./sample/boxWH.png)
+![2](./sample/AnchorBoxRatio.png)
+![3](./sample/EachClassNum.png)
+![4](./sample/EachClassNumPie.png)
 
 
