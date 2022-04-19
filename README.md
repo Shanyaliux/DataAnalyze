@@ -26,10 +26,9 @@ python DataAnalyze.py coco ./tarin.json --out ./out/
 python DataAnalyze.py voc ./xml/ --out ./out/
 ```
 
-<div  align="center">    
-<img src="./sample/boxWH.png" width = "300" height = "200" alt="boxWH" align=center />
-<img src="./sample/AnchorBoxRatio.png" width = "300" height = "200" alt="boxWH" align=center />
-<img src="./sample/EachClassNum.png" width = "300" height = "200" alt="boxWH" align=center />
-<img src="./sample/EachClassNumPie.png" width = "300" height = "200" alt="boxWH" align=center />
-</div>
+![](./sample/boxWH.png)
+![](./sample/AnchorBoxRatio.png)
+![](./sample/EachClassNum.png)
+![](./sample/EachClassNumPie.png)
+
 
