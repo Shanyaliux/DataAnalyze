@@ -49,7 +49,7 @@ class DataAnalyze:
         self.imagesNum = len(lines)
         for i, line in enumerate(lines):
             lin = line.strip(' ').split(' ')
-            h, w = lin[1].split(',')
+            w, h = lin[1].split(',')
             self.imageWH_list[0].append(float(w))
             self.imageWH_list[1].append(float(h))
             calculatedCategory = []
