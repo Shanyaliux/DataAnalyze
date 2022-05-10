@@ -307,11 +307,10 @@ class DataAnalyze:
 
 def parse_args():
     parser = argparse.ArgumentParser(description='dataset analyze')
-    parser.add_argument('type', type=str, help="Dataset format, optional 'voc' and 'coco'", default='voc')
+    parser.add_argument('type', type=str, help="Dataset format, optional 'voc' and 'coco'")
     parser.add_argument('path', type=str, help='Dataset path, if it is a voc dataset, it corresponds '
                                                'to the xml directory, if it is a coco dataset, it is the json file '
-                                               'path',
-                        default='/home/lgh/code/Voc2Coco/NEU-DET/xml')
+                                               'path')
     parser.add_argument('--out', type=str, default='out', help='Result output directory')
     args = parser.parse_args()
     return args
