@@ -9,7 +9,7 @@ pip install -r requirements.txt
 ### Usage
 
 ```bash
-python DataAnalyze.py ${type} ${path} [--out ${out}]
+python analyze.py ${type} ${path} [--out ${out}]
 ```
 - `type` The format of the dataset, optional 'coco' or 'voc'. 
 - `path` The path of dataset.
@@ -19,11 +19,11 @@ If `type` is 'voc', the `path` is the path of the xml file directory.
 
 #### Example
 ```bash
-python DataAnalyze.py coco ./tarin.json --out ./out/
+python analyze.py coco ./tarin.json --out ./out/
 ```
 
 ```bash
-python DataAnalyze.py voc ./xml/ --out ./out/
+python analyze.py voc ./xml/ --out ./out/
 ```
 
 ### Screenshot
