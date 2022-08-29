@@ -42,10 +42,10 @@ def readVoc(xmlPath):
     :return: list of xmlInfo
     """
     vocInfo = []
-    xmlList = os.listdir(xmlPath)
+    xmlList = glob.glob(xmlPath + os.sep + '*.xml')
     xmlList.sort()
     for xml in xmlList:
-        xmlFile = os.path.join(xmlPath, xml)
+        xmlFile = xml
         vocInfo.append(readXml(xmlFile))
     return vocInfo
 

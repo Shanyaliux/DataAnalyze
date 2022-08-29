@@ -1,3 +1,6 @@
 /out/
 /Annotations/
-instances_val2017.json
+neuCoco/
+neuVoc/
+utils/__pycache__/
+__pycache__/
