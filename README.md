@@ -1,3 +1,5 @@
+# The latest content has been migrated to [Ghlerrix/DataAnalyze](https://github.com/Ghlerrix/DataAnalyze)
+
 ### Install
 
 ```bash
